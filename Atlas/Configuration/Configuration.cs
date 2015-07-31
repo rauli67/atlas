@@ -11,6 +11,8 @@ namespace Atlas.Configuration
     {
         private IList<Dependency> _dependencies;
 
+        public delegate IContainer BuildMultiTenantContainerAction(IContainer applicationContainer); 
+
         internal Configuration()
         {
             AllowsMultipleInstances = false;
@@ -74,6 +76,16 @@ namespace Atlas.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Autofac-container build action for building MultiTenantContainer.
+        /// The result of this action will be used instead of the IContainer that this action is paremeterized with.
+        /// </summary>
+        public Configuration<THostedProcess> WithMultiTenantContainer(BuildMultiTenantContainerAction buildMultiTenantContainer)
+        {
+            BuildMultiTenantContainer = buildMultiTenantContainer;
+            return this;
+        }        
+
         ///<summary>
         /// Allows you to inject the command line arguments into your atlas.  These arguments override the run mode (console or service), and installation parameters.
         /// Account, Startup, Username, Password, etc.
@@ -110,9 +122,12 @@ namespace Atlas.Configuration
                 .As<IAmAHostedProcess>()
                 .OnActivated(a => a.Context.InjectUnsetProperties(a.Instance));
 
-            return builder.Build();
+            return BuildMultiTenantContainer == null
+                ? builder.Build()
+                : BuildMultiTenantContainer(builder.Build());
         }
         internal Action<ContainerBuilder> Registrations { get; set; }
+        internal BuildMultiTenantContainerAction BuildMultiTenantContainer { get; set; }
         internal Action OnBeforeStart { get; set; }
         internal string Name { get; set; }
         internal string Description { get; set; }

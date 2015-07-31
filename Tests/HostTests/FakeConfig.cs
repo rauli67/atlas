@@ -19,7 +19,9 @@ namespace Tests.HostTests
         {
             var builder = new ContainerBuilder();
             builder.RegisterInstance(_fakeHost).As<Host>();
-            return CompiledContainer = builder.Build();
+            return CompiledContainer = BuildMultiTenantContainer == null
+                ? builder.Build()
+                : BuildMultiTenantContainer(builder.Build());
         }
     }
 }

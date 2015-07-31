@@ -6,6 +6,7 @@ using Atlas.Initialization;
 using Atlas.Installation;
 using Atlas.Configuration;
 using Autofac;
+using Autofac.Extras.Multitenant;
 using NUnit.Framework;
 using Rhino.Mocks;
 
@@ -102,6 +103,25 @@ namespace Tests.HostTests
             }
 
             [Test]
+            public void WithMultiTenantContainerBuilderAction()
+            {
+                Host host = new Host(_initializationStrategyFactory);
+                var config = new FakeConfig(host);
+                config.WithRegistrations(b => b.Register(c => new Thing()))
+                    .WithMultiTenantContainer((c) => new MultitenantContainer(new DummyTenantIdentificationStrategy(), c));
+
+                ContainerProvider.Instance.ApplicationContainer = config.Compile();
+
+                CreatesInitializationStrategy();
+                InitializesTheHost(config);
+
+                host.Run(config);
+
+                Assert.IsTrue(ContainerProvider.Instance.ApplicationContainer.IsRegistered(typeof(Thing)));            
+                Assert.IsTrue(ContainerProvider.Instance.ApplicationContainer is MultitenantContainer);
+            }
+
+            [Test]
             public void WithInstallModeSet()
             {
                 Host host = new Host(_initializationStrategyFactory);
@@ -149,5 +169,15 @@ namespace Tests.HostTests
         }
 
         public bool Started { get; set; }
+    }
+
+    public class DummyTenantIdentificationStrategy : ITenantIdentificationStrategy
+    {
+        public bool TryIdentifyTenant(out object tenantId)
+        {
+            tenantId = 1;
+
+            return true;
+        }
     }
 }
