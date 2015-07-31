@@ -120,12 +120,16 @@ namespace Atlas.Configuration
 
             builder.RegisterType(typeof(THostedProcess))
                 .As<IAmAHostedProcess>()
-                .OnActivated(a => a.Context.InjectUnsetProperties(a.Instance));
+                .PropertiesAutowired();                
+
+            if (Registrations != null)
+                Registrations(builder);
 
             return BuildMultiTenantContainer == null
                 ? builder.Build()
                 : BuildMultiTenantContainer(builder.Build());
         }
+
         internal Action<ContainerBuilder> Registrations { get; set; }
         internal BuildMultiTenantContainerAction BuildMultiTenantContainer { get; set; }
         internal Action OnBeforeStart { get; set; }

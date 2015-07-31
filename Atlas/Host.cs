@@ -1,5 +1,4 @@
 ﻿using Atlas.Factories;
-using Autofac;
 using Atlas.Configuration;
 
 namespace Atlas
@@ -20,21 +19,8 @@ namespace Atlas
                 dependency.Start();
             }
 
-            UpdateRegistrations(configuration);
-
             _initilaizationStrategyFactory.Create(configuration.InstallMode).Initialize(configuration);
         }
 
-        private static void UpdateRegistrations<THostedProcess>(Configuration<THostedProcess> configuration)
-        {
-            if (configuration.Registrations != null)
-            {
-                var builder = new ContainerBuilder();
-
-                configuration.Registrations(builder);
-
-                builder.Update(ContainerProvider.Instance.ApplicationContainer);
-            }
-        }
     }
 }
